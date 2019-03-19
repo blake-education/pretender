@@ -176,7 +176,9 @@ function interceptor(pretender, nativeRequest) {
     var xhr = fakeXHR._passthroughRequest = new pretender._nativeXMLHttpRequest();
     xhr.open(fakeXHR.method, fakeXHR.url, fakeXHR.async, fakeXHR.username, fakeXHR.password);
 
-    if (fakeXHR.responseType === 'arraybuffer') {
+    var isResponseTypeArrayBufferOrBlob = fakeXHR.responseType === 'arraybuffer' || fakeXHR.responseType === 'blob'
+
+    if (isResponseTypeArrayBufferOrBlob) {
       lifecycleProps = ['readyState', 'response', 'status', 'statusText'];
       xhr.responseType = fakeXHR.responseType;
     }
@@ -188,12 +190,12 @@ function interceptor(pretender, nativeRequest) {
 
     // add progress event for async calls
     // avoid using progress events for sync calls, they will hang https://bugs.webkit.org/show_bug.cgi?id=40996.
-    if (fakeXHR.async && fakeXHR.responseType !== 'arraybuffer') {
+    if (fakeXHR.async && !isResponseTypeArrayBufferOrBlob) {
       evts.push('progress');
       uploadEvents.push('progress');
     }
 
-    // update `propertyNames` properties from `fromXHR` to `toXHR`
+      // update `propertyNames` properties from `fromXHR` to `toXHR`
     function copyLifecycleProperties(propertyNames, fromXHR, toXHR) {
       for (var i = 0; i < propertyNames.length; i++) {
         var prop = propertyNames[i];
